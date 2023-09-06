@@ -1,4 +1,5 @@
-# Grafana data source plugin template
+# BMC Excel Datasource
+[![CI](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/ci.yml/badge.svg)](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/ci.yml)
 
 This template is a starting point for building a Data Source Plugin for Grafana.
 
