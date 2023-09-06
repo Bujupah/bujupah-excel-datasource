@@ -33,3 +33,15 @@ e2e-results/
 .idea
 
 .eslintcache
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+# we temporarily commit this file because yarn downloading it
+# somehow produces different checksum values
+!.yarn/cache/pa11y-ci-https-1e9675e9e1-668c9119bd.zip
+.pnp.*

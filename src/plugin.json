@@ -7,7 +7,7 @@
   "backend": true,
   "executable": "gpx_excel",
   "info": {
-    "description": "Load multiple csv excel files data into grafana s dashboards from sftp servers",
+    "description": "Load multiple csv/excel files data into grafana s dashboards from sftp servers",
     "author": {
       "name": "Bmc"
     },
