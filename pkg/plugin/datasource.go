@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -20,6 +21,7 @@ import (
 var (
 	_ backend.QueryDataHandler      = (*Datasource)(nil)
 	_ backend.CheckHealthHandler    = (*Datasource)(nil)
+	_ backend.CallResourceHandler   = (*Datasource)(nil)
 	_ instancemgmt.InstanceDisposer = (*Datasource)(nil)
 )
 
@@ -106,4 +108,48 @@ func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequ
 		Status:  status,
 		Message: message,
 	}, nil
+}
+
+// CallResource is called when a client sends a sync request to the plugin. This callback
+// allows sending the first message.
+func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
+	response := &backend.CallResourceResponse{}
+
+	if req.Path == "ping" {
+		details := []byte("{\"err\": \"connection timed out\"}")
+
+		check := backend.CheckHealthResult{
+			Status:      http.StatusBadRequest,
+			Message:     "Failed to ping server",
+			JSONDetails: details,
+		}
+		body, _ := json.Marshal(check)
+
+		response.Body = body
+		response.Status = http.StatusBadRequest
+
+		sender.Send(response)
+		return nil
+	}
+
+	if req.Path == "check" {
+		check := backend.CheckHealthResult{
+			Status:      http.StatusOK,
+			Message:     "Successfully loaded",
+			JSONDetails: nil,
+		}
+		body, _ := json.Marshal(check)
+		response.Body = body
+		response.Status = http.StatusOK
+
+		sender.Send(response)
+		return nil
+	}
+
+	err := fmt.Errorf("failed to %s", req.Path)
+	response.Status = http.StatusBadRequest
+	response.Body = []byte("{\"message\":\"" + err.Error() + "\"}")
+	sender.Send(response)
+
+	return nil
 }

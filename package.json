@@ -15,7 +15,7 @@
     "server": "docker-compose up --build",
     "sign": "npx --yes @grafana/sign-plugin@latest"
   },
-  "author": "Bmc",
+  "author": "Khalil Mejdi",
   "license": "Apache-2.0",
   "devDependencies": {
     "@babel/core": "^7.21.4",
@@ -60,6 +60,7 @@
     "@grafana/data": "9.5.3",
     "@grafana/runtime": "9.5.3",
     "@grafana/ui": "9.5.3",
+    "@grafana/experimental": "1.6.1",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "tslib": "2.5.3"
