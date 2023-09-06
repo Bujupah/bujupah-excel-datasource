@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "Excel",
+  "id": "bmc-excel-datasource",
+  "metrics": true,
+  "backend": true,
+  "executable": "gpx_excel",
+  "info": {
+    "description": "Load multiple csv excel files data into grafana s dashboards from sftp servers",
+    "author": {
+      "name": "Bmc"
+    },
+    "keywords": ["datasource"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=9.5.3",
+    "plugins": []
+  }
+}
