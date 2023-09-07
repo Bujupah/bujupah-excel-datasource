@@ -6,6 +6,7 @@ import (
 	"github.com/Bujupah/go4ftp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -33,13 +34,13 @@ type CheckPayload struct {
 	Paths  []string `json:"path"`
 }
 
-func Ping(_ context.Context, req *backend.CallResourceRequest) Result {
+func Ping(_ context.Context, req *backend.CallResourceRequest) *Result {
 	// This function is empty. It is here to make sure that
 	// the package is imported and the code is executed.
 	cmd := &PingPayload{}
 
 	if err := json.Unmarshal(req.Body, cmd); err != nil {
-		return Result{
+		return &Result{
 			Message: "Failed to parse payload",
 			Status:  400,
 			Error:   err.Error(),
@@ -61,7 +62,7 @@ func Ping(_ context.Context, req *backend.CallResourceRequest) Result {
 	})
 
 	if err != nil {
-		return Result{
+		return &Result{
 			Message: "Failed to create FTP instance",
 			Status:  500,
 			Error:   err.Error(),
@@ -70,35 +71,43 @@ func Ping(_ context.Context, req *backend.CallResourceRequest) Result {
 
 	err = instance.Ping()
 	if err != nil {
-		return Result{
+		return &Result{
 			Message: "Failed to ping FTP server",
 			Status:  504,
 			Error:   err.Error(),
 		}
 	}
 
-	return Result{
+	return &Result{
 		Message: "Successfully connected to FTP server",
 		Status:  200,
 		Error:   "",
 	}
 }
 
-func Check(_ context.Context, req *backend.CallResourceRequest) Result {
-	// This function is empty. It is here to make sure that
-	// the package is imported and the code is executed.
+func Check(_ context.Context, req *backend.CallResourceRequest) *Result {
+	logger := log.New()
+
 	cmd := &CheckPayload{}
 
 	if err := json.Unmarshal(req.Body, cmd); err != nil {
-		return Result{
+		return &Result{
+			Status:  http.StatusBadRequest,
 			Message: "Failed to parse payload",
-			Status:  400,
 			Error:   err.Error(),
 		}
 	}
 
 	if cmd.Secure {
 		cmd.Password = req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["password"]
+	}
+
+	if len(cmd.Paths) == 0 {
+		return &Result{
+			Status:  http.StatusBadRequest,
+			Message: "No paths specified",
+			Error:   "No paths specified",
+		}
 	}
 
 	instance, err := go4ftp.NewInstance(go4ftp.ConnConfig{
@@ -112,14 +121,12 @@ func Check(_ context.Context, req *backend.CallResourceRequest) Result {
 	})
 
 	if err != nil {
-		return Result{
+		return &Result{
 			Message: "Failed to create FTP instance",
-			Status:  500,
+			Status:  http.StatusInternalServerError,
 			Error:   err.Error(),
 		}
 	}
-
-	logger := log.New()
 
 	logger.Info("Successfully created FTP instance", "target", cmd.Target, "paths", cmd.Paths)
 
@@ -127,9 +134,9 @@ func Check(_ context.Context, req *backend.CallResourceRequest) Result {
 	if cmd.Target == "folder" {
 		result, err = instance.Read(cmd.Paths[0])
 		if err != nil {
-			return Result{
+			return &Result{
+				Status:  http.StatusGatewayTimeout,
 				Message: "Failed to read from FTP server",
-				Status:  504,
 				Error:   err.Error(),
 			}
 		}
@@ -138,9 +145,9 @@ func Check(_ context.Context, req *backend.CallResourceRequest) Result {
 	if cmd.Target == "file" {
 		result, err = instance.Read(cmd.Paths[0])
 		if err != nil {
-			return Result{
+			return &Result{
+				Status:  http.StatusGatewayTimeout,
 				Message: "Failed to read from FTP server",
-				Status:  504,
 				Error:   err.Error(),
 			}
 		}
@@ -150,9 +157,9 @@ func Check(_ context.Context, req *backend.CallResourceRequest) Result {
 		for _, path := range cmd.Paths {
 			data, err := instance.Read(path)
 			if err != nil {
-				return Result{
+				return &Result{
+					Status:  http.StatusGatewayTimeout,
 					Message: "Failed to read from FTP server",
-					Status:  504,
 					Error:   err.Error(),
 				}
 			}
@@ -168,10 +175,35 @@ func Check(_ context.Context, req *backend.CallResourceRequest) Result {
 		}
 	}
 
-	return Result{
-		Message: "Successfully pinged ftp server",
-		Status:  200,
-		Data:    filteredResult,
-		Error:   "",
+	if len(filteredResult) == 0 {
+		return resultEmptyError(cmd.Target, cmd.Paths[0])
 	}
+
+	return &Result{
+		Status:  http.StatusOK,
+		Message: "Successfully pinged ftp server",
+		Data:    filteredResult,
+	}
+}
+
+func resultEmptyError(target, filepath string) *Result {
+	if target == "file" || target == "files" {
+		return &Result{
+			Status:  http.StatusNotFound,
+			Message: "File does not exist with the specified path",
+			Error:   "File does not exist with the specified path",
+			Data:    filepath,
+		}
+	}
+
+	if target == "file" {
+		return &Result{
+			Status:  http.StatusNotFound,
+			Message: "No files found in the specified folder",
+			Error:   "No files found in the specified folder",
+			Data:    filepath,
+		}
+	}
+
+	return nil
 }
