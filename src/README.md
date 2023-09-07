@@ -4,6 +4,9 @@ Remove any remaining comments before publishing as these may be displayed on Gra
 # BMC Excel Datasource
 
 [![CI](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/ci.yml/badge.svg)](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/ci.yml)
+[![Docs](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/jekyll-gh-pages.yml/badge.svg)](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/jekyll-gh-pages.yml)
+[![Latest Grafana API Compatibility Check](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/is-compatible.yml/badge.svg)](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/is-compatible.yml)
+[![Release](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/release.yml/badge.svg)](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/release.yml)
 
 <img src="img/logo.png" width=50 alt="Excel Datasource Logo"/>
 
