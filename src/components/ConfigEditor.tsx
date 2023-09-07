@@ -1,39 +1,62 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { ChangeEvent, useEffect } from 'react';
-import { InlineField, RadioButtonGroup, SecretInput, Input, InlineSwitch, HorizontalGroup, Button, Badge, Spinner } from '@grafana/ui';
+import {
+  InlineField,
+  RadioButtonGroup,
+  SecretInput,
+  Input,
+  InlineSwitch,
+  HorizontalGroup,
+  Button,
+  Badge,
+  Spinner,
+} from '@grafana/ui';
+
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
+
 import { AccessType, MyDataSourceOptions, MySecureJsonData, TargetType } from '../types';
-import { ping } from '../services/backend';
 
-import SectionHeader from './widgets/SectionHeader'
+import { ping, check } from '../services/backend';
 
-import { ftpTargetOptions, accessTypeOptions } from './constants'
+import SectionHeader from './widgets/SectionHeader';
 
-interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> { }
+import { ftpTargetOptions, accessTypeOptions } from './constants';
+
+interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> {}
 
 export function ConfigEditor(props: Props) {
   const { onOptionsChange, options } = props;
-  const [init, setInit] = React.useState<boolean>(false)
+  const [init, setInit] = React.useState<boolean>(false);
 
-  const [pingResult, setPingResult] = React.useState<boolean | undefined>(undefined)
-  const [isPinging, setIsPinging] = React.useState(false)
-  const [isPulling, setIsChecking] = React.useState(false)
+  const [pingResult, setPingResult] = React.useState<boolean | undefined>(undefined);
+  const [isPinging, setIsPinging] = React.useState(false);
+  const [isPulling, setIsChecking] = React.useState(false);
 
   const { jsonData, secureJsonFields } = options;
   const secureJsonData = (options.secureJsonData || {}) as MySecureJsonData;
 
   useEffect(() => {
-    const pathIsEmpty = !jsonData.path || jsonData.path.length === 0
+    const pathIsEmpty = !jsonData.path || jsonData.path.length === 0;
     const data: MyDataSourceOptions = {
       ...options.jsonData,
       path: pathIsEmpty ? [''] : jsonData.path,
-      target: jsonData.target ?? 'files',
-      access: jsonData.access ?? 'sftp'
+      target: jsonData.target ?? 'file',
+      access: jsonData.access ?? 'sftp',
     };
-    onPing()
+    onPing();
     onOptionsChange({ ...options, jsonData: data });
     setInit(true);
-  }, [])
+  }, []);
 
+  const onInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const data: MyDataSourceOptions = {
+      ...options.jsonData,
+      [event.target.name]: ['ignoreHostKey', 'trimLeadingSpace'].includes(event.target.name)
+        ? event.target.checked
+        : event.target.value,
+    };
+    onOptionsChange({ ...options, jsonData: data });
+  };
 
   const onAccessTypeChange = (item: AccessType) => {
     const jsonData: MyDataSourceOptions = {
@@ -47,63 +70,7 @@ export function ConfigEditor(props: Props) {
     const data: MyDataSourceOptions = {
       ...options.jsonData,
       target: item!,
-      path: [''],
-    };
-    onOptionsChange({ ...options, jsonData: data });
-  };
-
-  const onDelimiterChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const data: MyDataSourceOptions = {
-      ...options.jsonData,
-      delimiter: event.target.value,
-    };
-    onOptionsChange({ ...options, jsonData: data });
-  };
-
-  const onCommentChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const data: MyDataSourceOptions = {
-      ...options.jsonData,
-      comment: event.target.value,
-    };
-    onOptionsChange({ ...options, jsonData: data });
-  };
-
-  const onTrimLeadingSpaceChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const data: MyDataSourceOptions = {
-      ...options.jsonData,
-      trimLeadingSpace: event.target.checked || !!event.target.value,
-    };
-    onOptionsChange({ ...options, jsonData: data });
-  };
-
-  const onIgnoreHostKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const data: MyDataSourceOptions = {
-      ...options.jsonData,
-      ignoreHostKey: event.target.checked || !!event.target.value,
-    };
-    onOptionsChange({ ...options, jsonData: data });
-  };
-
-  const onHostChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const data: MyDataSourceOptions = {
-      ...options.jsonData,
-      host: event.target.value,
-    };
-    onOptionsChange({ ...options, jsonData: data });
-  };
-
-  const onPortChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const data: MyDataSourceOptions = {
-      ...options.jsonData,
-      port: +event.target.value,
-    };
-    onOptionsChange({ ...options, jsonData: data });
-  };
-
-  const onUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const data: MyDataSourceOptions = {
-      ...options.jsonData,
-      username: event.target.value,
+      path: jsonData.path,
     };
     onOptionsChange({ ...options, jsonData: data });
   };
@@ -131,126 +98,127 @@ export function ConfigEditor(props: Props) {
     });
   };
 
-
   const onFilePathChange = (event: ChangeEvent<HTMLInputElement>) => {
     const jsonData: MyDataSourceOptions = {
       ...options.jsonData,
       path: [event.target.value],
     };
     onOptionsChange({ ...options, jsonData });
-  }
-
-  const onAgeChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const data: MyDataSourceOptions = {
-      ...options.jsonData,
-      age: +event.target.value,
-    };
-    onOptionsChange({ ...options, jsonData: data });
   };
 
   const onFilePathIdxChange = (event: ChangeEvent<HTMLInputElement>, idx: number) => {
-    const hasSamePath = jsonData.path.find((path: string) => event.target.value === path)
+    const hasSamePath = jsonData.path.find((path: string) => event.target.value === path);
     if (hasSamePath) {
-      jsonData.path = [...new Set(jsonData.path)]
+      jsonData.path = [...new Set(jsonData.path)];
     }
 
-    jsonData.path[idx] = event.target.value
+    jsonData.path[idx] = event.target.value;
     const data: MyDataSourceOptions = {
       ...options.jsonData,
       path: jsonData.path,
     };
     onOptionsChange({ ...options, jsonData: data });
-  }
+  };
 
   const onPing = async () => {
-    setIsPinging(true)
-    ping().then((result) => {
-      setPingResult(result)
-      setIsPinging(false)
-    })
-  }
+    setIsPinging(true);
+    ping(options.uid, { jsonData, secureJsonFields, secureJsonData }).then((result) => {
+      setPingResult(result);
+      setIsPinging(false);
+    });
+  };
 
   const onCheck = async () => {
-    setIsChecking(true)
-    ping().then((result) => {
-      setPingResult(result)
-      setIsChecking(false)
-    })
-  }
+    setIsChecking(true);
+    check(options.uid, { jsonData, secureJsonFields, secureJsonData }).then((result) => {
+      setPingResult(result);
+      setIsChecking(false);
+    });
+  };
 
   const onAddPath = () => {
-    const hasAlready = jsonData.path[jsonData.path.length - 1] == ''
+    const hasAlready = jsonData.path[jsonData.path.length - 1] === '';
     if (hasAlready) {
-      return
+      return;
     }
     const data: MyDataSourceOptions = {
       ...options.jsonData,
       path: [...jsonData.path, ''],
     };
     onOptionsChange({ ...options, jsonData: data });
-  }
+  };
 
   const onRemovePath = (idx: number) => {
-    const paths = jsonData.path.filter((_, i) => i !== idx)
+    const paths = jsonData.path.filter((_, i) => i !== idx);
     const data: MyDataSourceOptions = {
       ...options.jsonData,
       path: paths,
     };
     onOptionsChange({ ...options, jsonData: data });
-  }
+  };
 
   const renderTargetPathFields = () => {
     if (jsonData.target === 'file') {
-      return <InlineField label="File" labelWidth={16} grow>
-        <Input
-          placeholder="Path to your csv/xlsx file"
-          value={jsonData.path && jsonData.path.length > 0 ? jsonData.path[0] : ''}
-          onChange={onFilePathChange}
-        />
-      </InlineField>
+      return (
+        <InlineField label="File" labelWidth={16} grow>
+          <Input
+            placeholder="Path to your csv/xlsx file"
+            value={jsonData.path && jsonData.path.length > 0 ? jsonData.path[0] : ''}
+            onChange={onFilePathChange}
+          />
+        </InlineField>
+      );
     }
 
     if (jsonData.target === 'folder') {
-      return <InlineField label="Folder" labelWidth={16} grow>
-        <Input
-          placeholder="Path to your folder"
-          value={jsonData.path && jsonData.path.length > 0 ? jsonData.path[0] : ''}
-          onChange={onFilePathChange}
-        />
-      </InlineField>
+      return (
+        <InlineField label="Folder" labelWidth={16} grow>
+          <Input
+            placeholder="Path to your folder"
+            value={jsonData.path && jsonData.path.length > 0 ? jsonData.path[0] : ''}
+            onChange={onFilePathChange}
+          />
+        </InlineField>
+      );
     }
 
-    return <>
-      <InlineField label={`Files`} labelWidth={16} grow>
-        <div style={{ display: 'flex', gap: '4px', flexDirection: 'column' }}>
-          {
-            jsonData.path.map((item: string, idx) => {
-              return <HorizontalGroup>
-                <Input
-                  key={`file_key_${idx}`}
-                  placeholder="Path to your csv/xlsx file"
-                  value={item}
-                  width={53}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => onFilePathIdxChange(e, idx)}
-                />
-                <Button icon='minus' variant='destructive' onClick={() => onRemovePath(idx)}></Button>
-              </HorizontalGroup>
-            })
-          }
-          <Button icon='plus' variant='secondary' onClick={onAddPath}>Add new file path</Button>
-        </div>
-      </InlineField>
-    </>
-  }
+    if (jsonData.target === 'files') {
+      return (
+        <>
+          <InlineField label={`Files`} labelWidth={16} grow>
+            <div style={{ display: 'flex', gap: '4px', flexDirection: 'column' }}>
+              {jsonData.path.map((item: string, idx) => {
+                return (
+                  <HorizontalGroup key={`file_key_${idx}`}>
+                    <Input
+                      placeholder="Path to your csv/xlsx file"
+                      value={item}
+                      width={53}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => onFilePathIdxChange(e, idx)}
+                    />
+                    <Button icon="minus" variant="destructive" onClick={() => onRemovePath(idx)}></Button>
+                  </HorizontalGroup>
+                );
+              })}
+              <Button icon="plus" variant="secondary" onClick={onAddPath}>
+                Add new file path
+              </Button>
+            </div>
+          </InlineField>
+        </>
+      );
+    }
 
+    return <>Target type is not supported</>;
+  };
 
   if (!init) {
-    return <Spinner />
+    return <Spinner />;
   }
 
   return (
     <div className="gf-form-group">
-      <SectionHeader title='Access'>
+      <SectionHeader title="Access">
         <InlineField label="Type" labelWidth={16} grow>
           <RadioButtonGroup
             fullWidth
@@ -261,63 +229,42 @@ export function ConfigEditor(props: Props) {
         </InlineField>
       </SectionHeader>
 
-      <SectionHeader title='Options'>
+      <SectionHeader title="Options">
         <InlineField label="Delimiter" labelWidth={16}>
-          <Input
-            placeholder=","
-            value={jsonData.delimiter}
-            onChange={onDelimiterChange}
-          />
+          <Input placeholder="," value={jsonData.delimiter} onChange={onInputChange} name="delimiter" />
         </InlineField>
         <InlineField label="Comment" labelWidth={16}>
-          <Input
-            placeholder="#"
-            value={jsonData.comment}
-            onChange={onCommentChange}
-          />
+          <Input placeholder="#" value={jsonData.comment} onChange={onInputChange} name="comment" />
         </InlineField>
         <InlineField label="Trim leading space" labelWidth={16}>
-          <InlineSwitch
-            value={jsonData.trimLeadingSpace}
-            onChange={onTrimLeadingSpaceChange}
-          />
+          <InlineSwitch value={jsonData.trimLeadingSpace} onChange={onInputChange} name="trimLeadingSpace" />
         </InlineField>
       </SectionHeader>
-      <SectionHeader title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          Connection <Badge color={
-            pingResult === undefined ? 'blue' : pingResult === true ? 'green' : 'red'
-          } icon='signal' text={pingResult === undefined ? 'n/a' : pingResult === true ? 'connected' : 'not connected'} />
-        </div>
-      }>
+      <SectionHeader
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            Connection{' '}
+            <Badge
+              color={pingResult === undefined ? 'blue' : pingResult === true ? 'green' : 'red'}
+              icon="signal"
+              text={pingResult === undefined ? 'n/a' : pingResult === true ? 'connected' : 'not connected'}
+            />
+          </div>
+        }
+      >
         <HorizontalGroup>
           <InlineField label="Host" labelWidth={16}>
-            <Input
-              placeholder="your.ftp.host"
-              value={jsonData.host}
-              onChange={onHostChange}
-            />
+            <Input placeholder="your.ftp.host" value={jsonData.host} onChange={onInputChange} name="host" />
           </InlineField>
-          <InlineField label="Port" >
-            <Input
-              placeholder="22"
-              value={jsonData.port}
-              onChange={onPortChange}
-            />
+          <InlineField label="Port">
+            <Input placeholder="22" value={jsonData.port} onChange={onInputChange} name="port" />
           </InlineField>
         </HorizontalGroup>
         <InlineField label="Ignore host key" labelWidth={16}>
-          <InlineSwitch
-            value={jsonData.ignoreHostKey}
-            onChange={onIgnoreHostKeyChange}
-          />
+          <InlineSwitch value={jsonData.ignoreHostKey} onChange={onInputChange} name="ignoreHostKey" />
         </InlineField>
         <InlineField label="Username" labelWidth={16}>
-          <Input
-            placeholder="username"
-            value={jsonData.username}
-            onChange={onUsernameChange}
-          />
+          <Input placeholder="username" value={jsonData.username} onChange={onInputChange} name="username" />
         </InlineField>
         <InlineField label="Password" labelWidth={16}>
           <SecretInput
@@ -331,15 +278,15 @@ export function ConfigEditor(props: Props) {
         <Button
           icon={isPinging ? 'fa fa-spinner' : 'sync'}
           onClick={onPing}
-          variant='primary'
+          variant="primary"
           tooltip={'Click to ping your FTP server'}
-          tooltipPlacement='right'
+          tooltipPlacement="right"
         >
           {isPinging ? 'Pinging...' : 'Ping'}
         </Button>
       </SectionHeader>
 
-      <SectionHeader title='Database'>
+      <SectionHeader title="Database">
         <InlineField label="Mode" labelWidth={16} grow>
           <RadioButtonGroup
             fullWidth
@@ -348,22 +295,16 @@ export function ConfigEditor(props: Props) {
             onChange={onTargetTypeChange}
           />
         </InlineField>
-        {
-          renderTargetPathFields()
-        }
+        {renderTargetPathFields()}
         <InlineField label="File(s) age (hours)" labelWidth={16}>
-          <Input
-            placeholder="24"
-            value={jsonData.age}
-            onChange={onAgeChange}
-          />
+          <Input placeholder="24" value={jsonData.age} onChange={onInputChange} name="age" />
         </InlineField>
         <Button
           icon={isPulling ? 'fa fa-spinner' : 'sync'}
           onClick={onCheck}
-          variant='primary'
+          variant="primary"
           tooltip={'Click to verify the provided files on FTP server'}
-          tooltipPlacement='right'
+          tooltipPlacement="right"
         >
           {isPulling ? 'Checking...' : 'Check'}
         </Button>

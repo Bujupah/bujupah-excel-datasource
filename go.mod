@@ -5,7 +5,7 @@ go 1.19
 require github.com/grafana/grafana-plugin-sdk-go v0.174.0
 
 require (
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	github.com/Bujupah/go4ftp v0.0.3 // indirect
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -30,13 +30,17 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.2 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.9 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/invopop/yaml v0.1.0 // indirect
+	github.com/jlaffaye/ftp v0.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.13.1 // indirect
+	github.com/kr/fs v0.1.0 // indirect
 	github.com/magefile/mage v1.15.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattetti/filebuffer v1.0.1 // indirect
@@ -51,6 +55,7 @@ require (
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.8 // indirect
+	github.com/pkg/sftp v1.13.5 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
@@ -71,6 +76,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.16.0 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect

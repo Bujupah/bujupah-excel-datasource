@@ -1,16 +1,16 @@
 import { DataQuery } from '@grafana/schema';
 import { DataSourceJsonData } from '@grafana/data';
 
-export type ColumnType = 'number' | 'string' | 'datetime' | 'json'
-export type AccessType = 'sftp' | 'ftp'
-export type TargetType = 'folder' | 'file' | 'files'
+export type ColumnType = 'number' | 'string' | 'datetime' | 'json';
+export type AccessType = 'sftp' | 'ftp';
+export type TargetType = 'folder' | 'file' | 'files';
 
 export interface MyQuery extends DataQuery {
   rawSql?: string;
   columnsType?: Array<{
     name: string;
-    type: ColumnType
-  }>
+    type: ColumnType;
+  }>;
 }
 
 export const DEFAULT_QUERY: Partial<MyQuery> = {
@@ -22,7 +22,7 @@ export const DEFAULT_QUERY: Partial<MyQuery> = {
  * These are options configured for each DataSource instance
  */
 export interface MyDataSourceOptions extends DataSourceJsonData {
-  access: AccessType
+  access: AccessType;
 
   delimiter: string;
   comment: string;
@@ -34,7 +34,7 @@ export interface MyDataSourceOptions extends DataSourceJsonData {
   port: number;
   ignoreHostKey: boolean;
   username: string;
-  
+
   age: number;
 }
 
@@ -42,5 +42,5 @@ export interface MyDataSourceOptions extends DataSourceJsonData {
  * Value that is used in the backend, but never sent over HTTP to the frontend
  */
 export interface MySecureJsonData {
-  password: string
+  password: string;
 }

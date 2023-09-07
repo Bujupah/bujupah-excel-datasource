@@ -1,13 +1,49 @@
-export const ping = async (): Promise<boolean | undefined> => {
-  await new Promise((r) => setTimeout(r, 2000))
+import { getBackendSrv } from '@grafana/runtime';
 
-  const min = new Date().getSeconds()
-  return min < 20 ? undefined : min < 40
-}
+const backend = getBackendSrv();
 
-export const check = async (): Promise<boolean | undefined> => {
-  await new Promise((r) => setTimeout(r, 2000))
+export const ping = async (uid: string, payload: any): Promise<boolean | undefined> => {
+  const res = await backend
+    .post(`/api/datasources/uid/${uid}/resources/ping`, {
+      access: payload.jsonData.access,
+      host: payload.jsonData.host,
+      port: +payload.jsonData.port,
+      username: payload.jsonData.username,
+      password: payload.secureJsonData.password ?? '',
+      secure: payload.secureJsonFields.password,
+      ignoreHostKey: payload.jsonData.ignoreHostKey,
+    })
+    .then((res) => {
+      return res.status === 200;
+    })
+    .catch((err) => {
+      console.error(err);
+      return undefined;
+    });
+  return res;
+};
 
-  const min = new Date().getSeconds()
-  return min < 20 ? undefined : min < 40
-}
+export const check = async (uid: string, payload: any): Promise<boolean | undefined> => {
+  if (!payload.jsonData.target || payload.jsonData.target.length === 0) {
+    return undefined;
+  }
+  const res = await backend
+    .post(`/api/datasources/uid/${uid}/resources/check`, {
+      access: payload.jsonData.access,
+      host: payload.jsonData.host,
+      port: +payload.jsonData.port,
+      username: payload.jsonData.username,
+      password: payload.secureJsonData.password ?? '',
+      secure: payload.secureJsonFields.password,
+      ignoreHostKey: payload.jsonData.ignoreHostKey,
+      target: payload.jsonData.path[0],
+    })
+    .then((res) => {
+      return res.status === 200;
+    })
+    .catch((err) => {
+      console.error(err);
+      return undefined;
+    });
+  return res;
+};

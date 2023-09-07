@@ -116,40 +116,25 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 	response := &backend.CallResourceResponse{}
 
 	if req.Path == "ping" {
-		details := []byte("{\"err\": \"connection timed out\"}")
-
-		check := backend.CheckHealthResult{
-			Status:      http.StatusBadRequest,
-			Message:     "Failed to ping server",
-			JSONDetails: details,
-		}
-		body, _ := json.Marshal(check)
-
+		result := Ping(ctx, req)
+		body, _ := json.Marshal(result)
 		response.Body = body
-		response.Status = http.StatusBadRequest
+		response.Status = result.Status
 
-		sender.Send(response)
-		return nil
+		return sender.Send(response)
 	}
 
 	if req.Path == "check" {
-		check := backend.CheckHealthResult{
-			Status:      http.StatusOK,
-			Message:     "Successfully loaded",
-			JSONDetails: nil,
-		}
-		body, _ := json.Marshal(check)
+		result := Check(ctx, req)
+		body, _ := json.Marshal(result)
 		response.Body = body
-		response.Status = http.StatusOK
+		response.Status = result.Status
 
-		sender.Send(response)
-		return nil
+		return sender.Send(response)
 	}
 
 	err := fmt.Errorf("failed to %s", req.Path)
 	response.Status = http.StatusBadRequest
 	response.Body = []byte("{\"message\":\"" + err.Error() + "\"}")
-	sender.Send(response)
-
-	return nil
+	return sender.Send(response)
 }
