@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/Bujupah/go4ftp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"strings"
 	"time"
 )
@@ -28,7 +29,8 @@ type PingPayload struct {
 
 type CheckPayload struct {
 	PingPayload
-	Target string `json:"target"`
+	Target string   `json:"target"`
+	Paths  []string `json:"path"`
 }
 
 func Ping(_ context.Context, req *backend.CallResourceRequest) Result {
@@ -117,12 +119,44 @@ func Check(_ context.Context, req *backend.CallResourceRequest) Result {
 		}
 	}
 
-	result, err := instance.Read(cmd.Target)
-	if err != nil {
-		return Result{
-			Message: "Failed to read from FTP server",
-			Status:  504,
-			Error:   err.Error(),
+	logger := log.New()
+
+	logger.Info("Successfully created FTP instance", "target", cmd.Target, "paths", cmd.Paths)
+
+	result := make([]go4ftp.Entries, 0)
+	if cmd.Target == "folder" {
+		result, err = instance.Read(cmd.Paths[0])
+		if err != nil {
+			return Result{
+				Message: "Failed to read from FTP server",
+				Status:  504,
+				Error:   err.Error(),
+			}
+		}
+	}
+
+	if cmd.Target == "file" {
+		result, err = instance.Read(cmd.Paths[0])
+		if err != nil {
+			return Result{
+				Message: "Failed to read from FTP server",
+				Status:  504,
+				Error:   err.Error(),
+			}
+		}
+	}
+
+	if cmd.Target == "files" {
+		for _, path := range cmd.Paths {
+			data, err := instance.Read(path)
+			if err != nil {
+				return Result{
+					Message: "Failed to read from FTP server",
+					Status:  504,
+					Error:   err.Error(),
+				}
+			}
+			result = append(result, data...)
 		}
 	}
 

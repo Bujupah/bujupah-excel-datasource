@@ -33,10 +33,11 @@ export const check = async (uid: string, payload: any): Promise<boolean | undefi
       host: payload.jsonData.host,
       port: +payload.jsonData.port,
       username: payload.jsonData.username,
-      password: payload.secureJsonData.password ?? '',
+      password: payload.secureJsonData.password,
       secure: payload.secureJsonFields.password,
       ignoreHostKey: payload.jsonData.ignoreHostKey,
-      target: payload.jsonData.path[0],
+      target: payload.jsonData.target,
+      path: payload.jsonData.path,
     })
     .then((res) => {
       return res.status === 200;
