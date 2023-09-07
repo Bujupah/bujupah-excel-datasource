@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
+	"github.com/bmc/excel/pkg/plugin"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/bmc/excel/pkg/plugin"
 )
 
 func main() {

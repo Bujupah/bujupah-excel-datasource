@@ -5,12 +5,9 @@ import (
 	"encoding/json"
 	"github.com/Bujupah/go4ftp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"strings"
 	"time"
 )
-
-var logger = log.New().With("plugin", "bmc-excel-datasource")
 
 type Result struct {
 	Status  int         `json:"status"`
@@ -34,7 +31,7 @@ type CheckPayload struct {
 	Target string `json:"target"`
 }
 
-func Ping(ctx context.Context, req *backend.CallResourceRequest) Result {
+func Ping(_ context.Context, req *backend.CallResourceRequest) Result {
 	// This function is empty. It is here to make sure that
 	// the package is imported and the code is executed.
 	cmd := &PingPayload{}
@@ -85,7 +82,7 @@ func Ping(ctx context.Context, req *backend.CallResourceRequest) Result {
 	}
 }
 
-func Check(ctx context.Context, req *backend.CallResourceRequest) Result {
+func Check(_ context.Context, req *backend.CallResourceRequest) Result {
 	// This function is empty. It is here to make sure that
 	// the package is imported and the code is executed.
 	cmd := &CheckPayload{}
