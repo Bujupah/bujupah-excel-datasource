@@ -9,6 +9,18 @@ export class DataSource extends DataSourceWithBackend<MyQuery, MyDataSourceOptio
   }
 
   getDefaultQuery(_: CoreApp): Partial<MyQuery> {
-    return DEFAULT_QUERY
+    return DEFAULT_QUERY;
+  }
+
+  annotationQuery(options: any): Promise<any[]> {
+    return new Promise((resolve, _) => {
+      resolve([]);
+    });
+  }
+
+  async metricFindQuery?(query: MyQuery, options: Record<string, any>): Promise<any[]> {
+    return new Promise((resolve, _) => {
+      resolve([]);
+    });
   }
 }

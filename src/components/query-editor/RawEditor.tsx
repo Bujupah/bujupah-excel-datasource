@@ -25,7 +25,6 @@ export function RawEditor({ query, onChange }: RawEditorProps) {
   const [toolboxRef, toolboxMeasure] = useMeasure<HTMLDivElement>();
   const [editorRef, editorMeasure] = useMeasure<HTMLDivElement>();
 
-
   const renderQueryEditor = (width?: number, height?: number) => {
     return (
       <QueryEditorRaw
@@ -40,12 +39,7 @@ export function RawEditor({ query, onChange }: RawEditorProps) {
         {({ formatQuery }) => {
           return (
             <div ref={toolboxRef}>
-              <QueryToolbox
-                showTools
-                onFormatCode={formatQuery}
-                onExpand={setIsExpanded}
-                isExpanded={isExpanded}
-              />
+              <QueryToolbox showTools onFormatCode={formatQuery} onExpand={setIsExpanded} isExpanded={isExpanded} />
             </div>
           );
         }}
