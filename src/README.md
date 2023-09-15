@@ -25,28 +25,36 @@ Load multiple csv/excel files data into grafana's dashboards from ftp/sftp serve
 
 ## Features
 
-- Load multiple csv/xlsx files from ftp server.
-- Load multiple csv/xlsx files located in a folder from ftp server automatically.
-- Query data from multiple csv/xlsx files using sql like syntax.
-- Query data from multiple csv/xlsx files using grafana variables.
-- Join data from multiple csv/xlsx files using sql like syntax.
-- Rich query editor with syntax highlighting.
-- Rich query editor with autocomplete.
-- Rich query editor with query validation.
-- Rich query editor with query formatting.
+- Server Health check.
+- Files health check.
+- Support multiple formats such as CSV, TSV, LTSV, Fixed-Length Format, JSON and JSON Lines.
+- Auto-detect supported files.
+- SQL-like query language.
+- Data joins between multiple files.
+- Support grafana variables.
+- SQL syntax highlighting.
+- SQL autocomplete.
+- SQL validation.
+- SQL formatting.
 
 ## Todo
 
-- [x] Load multiple csv/xlsx files from ftp server.
-- [x] Load multiple csv/xlsx files located in a folder from ftp server automatically.
-- [x] Query data from multiple csv/xlsx files using sql like syntax.
-- [ ] Query data from multiple csv/xlsx files using grafana variables.
-- [ ] Join data from multiple csv/xlsx files using sql like syntax.
-- [x] Rich query editor with syntax highlighting.
-- [x] Rich query editor with autocomplete.
-- [ ] Rich query editor with query validation.
-- [ ] Rich query editor with query formatting.
-- [ ] Secured multi tenancy.
+- [ ] Server Health check.
+- [ ] Files health check.
+- [ ] Support CSV.
+- [ ] Support TSV.
+- [ ] Support LTSV.
+- [ ] Support Fixed-Length Format.
+- [ ] Support JSON.
+- [ ] Support JSON Lines.
+- [ ] Auto-detect supported files.
+- [ ] SQL-like query language.
+- [ ] Data joins between multiple files.
+- [ ] Support grafana variables.
+- [ ] SQL syntax highlighting.
+- [ ] SQL autocomplete.
+- [ ] SQL validation.
+- [ ] SQL formatting.
 
 ## Documentation
 
