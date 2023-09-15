@@ -5,19 +5,48 @@
   "id": "bmc-excel-datasource",
   "metrics": true,
   "backend": true,
+  "logs": true,
+  "tracing": true,
+  "builtIn": false,
+  "alerting": false,
+  "streaming": false,
+  "annotations": false,
+  "enterpriseFeatures": {
+    "healthDiagnosticsErrors": true
+  },
+  "pascalName": "ExcelDatasource",
+  "category": "sql",
+  "queryOptions": {
+    "maxDataPoints": false,
+    "minInterval": false,
+    "cacheTimeout": true
+  },
+  "state": "alpha",
   "executable": "gpx_excel",
   "info": {
     "description": "Load multiple csv/excel files data into grafana s dashboards from sftp servers",
     "author": {
-      "name": "Bmc"
+      "name": "Khalil Mejdi",
+      "url": "https://github.com/bujupah"
     },
-    "keywords": ["datasource"],
+    "keywords": ["datasource", "sql", "excel", "csv", "sftp", "ftp", "grafana"],
     "logos": {
-      "small": "img/logo.svg",
-      "large": "img/logo.svg"
+      "small": "img/logo.png",
+      "large": "img/logo.png"
     },
-    "links": [],
-    "screenshots": [],
+    "links": [
+      {
+        "name": "GitHub",
+        "url": "https://github.com/bujupah/bmc-excel-datasource"
+      }
+    ],
+    "screenshots": [
+      { "name": "Basic option", "path": "assets/basic_option.png" },
+      { "name": "Cconnection option", "path": "assets/connection_option.png" },
+      { "name": "File option", "path": "assets/file_option.png" },
+      { "name": "Files option", "path": "assets/files_option.png" },
+      { "name": "Folder option", "path": "assets/folder_option.png" }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },

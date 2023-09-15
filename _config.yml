@@ -1,0 +1,7 @@
+theme: jekyll-theme-minimal
+title: BMC Excel Datasource
+logo: /src/img/logo.png
+description: Load csv/excel files data into grafana's dashboards from SFTP servers
+
+show_downloads: true
+google_analytics:
