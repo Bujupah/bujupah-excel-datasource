@@ -5,20 +5,23 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { reportInteraction } from '@grafana/runtime';
-import { Modal, useStyles2, useTheme2 } from '@grafana/ui';
+import { Button, HorizontalGroup, Modal, useStyles2, useTheme2 } from '@grafana/ui';
 
 import { QueryEditorProps } from './types';
 
 import { QueryEditorRaw } from './QueryEditorRaw';
 import { QueryToolbox } from './QueryToolbox';
 import { MyQuery } from 'types';
+import { EditorHeader, FlexItem } from '@grafana/experimental';
+import { LLMEditor } from './LLMEditor';
 
 interface RawEditorProps extends Omit<QueryEditorProps, 'onChange'> {
+  isRunning: boolean;
   onRunQuery: () => void;
   onChange: (q: MyQuery, processQuery: boolean) => void;
 }
 
-export function RawEditor({ query, onChange }: RawEditorProps) {
+export function RawEditor({ query, onChange, onRunQuery, isRunning }: RawEditorProps) {
   const theme = useTheme2();
   const styles = useStyles2(getStyles);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -27,23 +30,38 @@ export function RawEditor({ query, onChange }: RawEditorProps) {
 
   const renderQueryEditor = (width?: number, height?: number) => {
     return (
-      <QueryEditorRaw
-        editorLanguageDefinition={{
-          id: 'sql',
-        }}
-        query={query}
-        width={width}
-        height={height ? height - toolboxMeasure.height : undefined}
-        onChange={onChange}
-      >
-        {({ formatQuery }) => {
-          return (
-            <div ref={toolboxRef}>
-              <QueryToolbox showTools onFormatCode={formatQuery} onExpand={setIsExpanded} isExpanded={isExpanded} />
-            </div>
-          );
-        }}
-      </QueryEditorRaw>
+      <>
+        <EditorHeader>
+          <HorizontalGroup align="center" justify="space-between">
+            <LLMEditor
+              onReply={(reply) => {
+                console.log(reply);
+              }}
+            />
+            <FlexItem grow={1} />
+            <Button icon="play" variant="primary" size="sm" onClick={() => onRunQuery()} disabled={isRunning}>
+              Run query
+            </Button>
+          </HorizontalGroup>
+        </EditorHeader>
+        <QueryEditorRaw
+          editorLanguageDefinition={{
+            id: 'sql',
+          }}
+          query={query}
+          width={width}
+          height={height ? height - toolboxMeasure.height : undefined}
+          onChange={onChange}
+        >
+          {({ formatQuery }) => {
+            return (
+              <div ref={toolboxRef}>
+                <QueryToolbox showTools onFormatCode={formatQuery} onExpand={setIsExpanded} isExpanded={isExpanded} />
+              </div>
+            );
+          }}
+        </QueryEditorRaw>
+      </>
     );
   };
 
