@@ -1,12 +1,12 @@
 <!-- This README file is going to be the one displayed on the Grafana.com website for your plugin. Uncomment and replace the content here before publishing.
 
 Remove any remaining comments before publishing as these may be displayed on Grafana.com -->
-# BMC Excel Datasource
+# Excel Datasource
 
-[![CI](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/ci.yml/badge.svg)](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/ci.yml)
-[![Docs](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/jekyll-gh-pages.yml/badge.svg)](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/jekyll-gh-pages.yml)
-[![Latest Grafana API Compatibility Check](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/is-compatible.yml/badge.svg)](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/is-compatible.yml)
-[![Release](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/release.yml/badge.svg)](https://github.com/Bujupah/bmc-excel-datasource/actions/workflows/release.yml)
+[![CI](https://github.com/Bujupah/bujupah-excel-datasource/actions/workflows/ci.yml/badge.svg)](https://github.com/Bujupah/bujupah-excel-datasource/actions/workflows/ci.yml)
+[![Docs](https://github.com/Bujupah/bujupah-excel-datasource/actions/workflows/jekyll-gh-pages.yml/badge.svg)](https://github.com/Bujupah/bujupah-excel-datasource/actions/workflows/jekyll-gh-pages.yml)
+[![Latest Grafana API Compatibility Check](https://github.com/Bujupah/bujupah-excel-datasource/actions/workflows/is-compatible.yml/badge.svg)](https://github.com/Bujupah/bujupah-excel-datasource/actions/workflows/is-compatible.yml)
+[![Release](https://github.com/Bujupah/bujupah-excel-datasource/actions/workflows/release.yml/badge.svg)](https://github.com/Bujupah/bujupah-excel-datasource/actions/workflows/release.yml)
 
 <img src="src/img/logo.png" width=50 alt="Excel Datasource Logo"/>
 

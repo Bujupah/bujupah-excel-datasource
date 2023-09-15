@@ -1,4 +1,4 @@
-module github.com/bmc/excel
+module github.com/bujupah/excel
 
 go 1.19
 
