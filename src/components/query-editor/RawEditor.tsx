@@ -32,7 +32,7 @@ export function RawEditor({ query, onChange, onRunQuery, isRunning }: RawEditorP
     return (
       <>
         <EditorHeader>
-          <HorizontalGroup align='center' justify='space-between'>
+          <HorizontalGroup align="center" justify="space-between">
             <LLMEditor
               onReply={(reply) => {
                 console.log(reply);

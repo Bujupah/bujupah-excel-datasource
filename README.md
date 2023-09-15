@@ -20,8 +20,9 @@ Load multiple csv/excel files data into grafana's dashboards from ftp/sftp serve
 
 ## Requirements
 
-- S/FTP server with access to the csv files
-- Grafana 7.0+
+- Grafana 9.0+
+- FTP or SFTP server
+- [Grafana LLM app](https://github.com/grafana/grafana-llm-app) - optional
 
 ## Features
 
