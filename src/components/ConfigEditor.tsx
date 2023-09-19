@@ -222,6 +222,21 @@ export function ConfigEditor(props: Props) {
   return (
     <div className="gf-form-group">
 
+      <SectionHeader title="Options">
+        <InlineField label="Delimiter" labelWidth={16} tooltip="Delimiter to be used to parse the CSV files.">
+          <Input placeholder="," value={jsonData.delimiter} onChange={onInputChange} name="delimiter" />
+        </InlineField>
+        <InlineField label="Comment" labelWidth={16}>
+          <Input placeholder="#" value={jsonData.comment} onChange={onInputChange} name="comment" />
+        </InlineField>
+        <InlineField label="Age" labelWidth={16} tooltip={'File(s) age in hours, if it is reached, grafana server will try to pull a new copy from FTP server.'}>
+          <Input placeholder="24" value={jsonData.age} onChange={onInputChange} name="age" />
+        </InlineField>
+        <InlineField label="Trim leading space" labelWidth={16}>
+          <InlineSwitch value={jsonData.trimLeadingSpace} onChange={onInputChange} name="trimLeadingSpace" />
+        </InlineField>
+      </SectionHeader>
+    
       <SectionHeader
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -247,7 +262,7 @@ export function ConfigEditor(props: Props) {
             <Input placeholder="your.ftp.host" value={jsonData.host} onChange={onInputChange} name="host" />
           </InlineField>
           <InlineField label="Port">
-            <Input placeholder="22" value={jsonData.port} onChange={onInputChange} name="port" />
+            <Input placeholder="22" value={jsonData.port} onChange={onInputChange} name="port" width={24} />
           </InlineField>
         </HorizontalGroup>
         <InlineField label="Ignore host key" labelWidth={16}>
@@ -276,7 +291,7 @@ export function ConfigEditor(props: Props) {
         </Button>
       </SectionHeader>
 
-      <SectionHeader title="Database">
+      <SectionHeader title="Connections">
         <InlineField label="Mode" labelWidth={16} grow>
           <RadioButtonGroup
             fullWidth
@@ -310,20 +325,22 @@ export function ConfigEditor(props: Props) {
 
               <tbody>
                 {ftpFiles.map((file, idx) => {
+                  const isAccepted = checkLimit(file.size, 5);
+                  const size = convertBytes(file.size)
+                  const color = isAccepted ? 'green' : 'red';
+                  const text = isAccepted ? 'accepted' : 'declined';
+                  const icon = isAccepted ? 'check-circle' : 'times-circle';
+                  const tooltip = isAccepted ? undefined : 'File size is more than 5MB';
                   return (
                     <tr key={`file_${idx}`}>
                       <td>{file.name}</td>
-                      <td>{convertBytes(file.size)}</td>
+                      <td>{size}</td>
                       <td>
                         <Badge
-                          tooltip={
-                            checkLimit(file.size, 5)
-                              ? undefined
-                              : 'File size is more than 5MB'
-                          }
-                          color={checkLimit(file.size, 5) ? 'green' : 'red'}
-                          text={checkLimit(file.size, 5) ? 'accepted' : 'declined'}
-                          icon="info-circle"
+                          tooltip={tooltip}
+                          color={color}
+                          text={text}
+                          icon={icon}
                         />
                       </td>
                     </tr>
@@ -335,21 +352,6 @@ export function ConfigEditor(props: Props) {
         </div>}
       </SectionHeader>
 
-
-      <SectionHeader title="Options">
-        <InlineField label="Delimiter" labelWidth={16} tooltip="Delimiter to be used to parse the CSV files.">
-          <Input placeholder="," value={jsonData.delimiter} onChange={onInputChange} name="delimiter" />
-        </InlineField>
-        <InlineField label="Comment" labelWidth={16}>
-          <Input placeholder="#" value={jsonData.comment} onChange={onInputChange} name="comment" />
-        </InlineField>
-        <InlineField label="Age" labelWidth={16} tooltip={'File(s) age in hours, if it is reached, grafana server will try to pull a new copy from FTP server.'}>
-          <Input placeholder="24" value={jsonData.age} onChange={onInputChange} name="age" />
-        </InlineField>
-        <InlineField label="Trim leading space" labelWidth={16}>
-          <InlineSwitch value={jsonData.trimLeadingSpace} onChange={onInputChange} name="trimLeadingSpace" />
-        </InlineField>
-      </SectionHeader>
     </div>
   );
 }
