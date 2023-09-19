@@ -40,8 +40,8 @@ Load multiple csv/excel files data into grafana's dashboards from ftp/sftp serve
 
 ## Todo
 
-- [ ] Server Health check.
-- [ ] Files health check.
+- [x] Server Health check.
+- [x] Files health check.
 - [ ] Support CSV.
 - [ ] Support TSV.
 - [ ] Support LTSV.
@@ -51,7 +51,7 @@ Load multiple csv/excel files data into grafana's dashboards from ftp/sftp serve
 - [ ] Auto-detect supported files.
 - [ ] SQL-like query language.
 - [ ] Data joins between multiple files.
-- [ ] Support grafana variables.
+- [x] Support grafana variables.
 - [ ] SQL syntax highlighting.
 - [ ] SQL autocomplete.
 - [ ] SQL validation.
