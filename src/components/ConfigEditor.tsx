@@ -21,8 +21,9 @@ import { ping, check } from '../services/backend';
 import SectionHeader from './widgets/SectionHeader';
 
 import { ftpTargetOptions, accessTypeOptions } from './constants';
+import { checkLimit, convertBytes } from 'utils/file';
 
-interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> {}
+interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> { }
 
 export function ConfigEditor(props: Props) {
   const { onOptionsChange, options } = props;
@@ -31,6 +32,8 @@ export function ConfigEditor(props: Props) {
   const [pingResult, setPingResult] = React.useState<boolean | undefined>(undefined);
   const [isPinging, setIsPinging] = React.useState(false);
   const [isPulling, setIsChecking] = React.useState(false);
+
+  const [ftpFiles, setFtpFiles] = React.useState<Array<{ name: string; size: number }>>([]);
 
   const { jsonData, secureJsonFields } = options;
   const secureJsonData = (options.secureJsonData || {}) as MySecureJsonData;
@@ -130,7 +133,7 @@ export function ConfigEditor(props: Props) {
 
   const onCheck = async () => {
     setIsChecking(true);
-    check(options.uid, { jsonData, secureJsonFields, secureJsonData }).then((result) => {
+    check(options.uid, { jsonData, secureJsonFields, secureJsonData }, setFtpFiles).then((result) => {
       setPingResult(result);
       setIsChecking(false);
     });
@@ -160,7 +163,7 @@ export function ConfigEditor(props: Props) {
   const renderTargetPathFields = () => {
     if (jsonData.target === 'file') {
       return (
-        <InlineField label="File" labelWidth={16} grow>
+        <InlineField label="File" labelWidth={16} grow tooltip={'Files should not exceed 5MB'}>
           <Input
             placeholder="Path to your csv/xlsx file"
             value={jsonData.path && jsonData.path.length > 0 ? jsonData.path[0] : ''}
@@ -172,7 +175,7 @@ export function ConfigEditor(props: Props) {
 
     if (jsonData.target === 'folder') {
       return (
-        <InlineField label="Folder" labelWidth={16} grow>
+        <InlineField label="Folder" labelWidth={16} grow tooltip={'Files should not exceed 5MB'}>
           <Input
             placeholder="Path to your folder"
             value={jsonData.path && jsonData.path.length > 0 ? jsonData.path[0] : ''}
@@ -185,7 +188,7 @@ export function ConfigEditor(props: Props) {
     if (jsonData.target === 'files') {
       return (
         <>
-          <InlineField label={`Files`} labelWidth={16} grow>
+          <InlineField label={`Files`} labelWidth={16} grow tooltip={'Files should not exceed 5MB'}>
             <div style={{ display: 'flex', gap: '4px', flexDirection: 'column' }}>
               {jsonData.path.map((item: string, idx) => {
                 return (
@@ -218,32 +221,11 @@ export function ConfigEditor(props: Props) {
 
   return (
     <div className="gf-form-group">
-      <SectionHeader title="Access">
-        <InlineField label="Type" labelWidth={16} grow>
-          <RadioButtonGroup
-            fullWidth
-            options={accessTypeOptions}
-            value={jsonData.access ?? 'sftp'}
-            onChange={onAccessTypeChange}
-          />
-        </InlineField>
-      </SectionHeader>
 
-      <SectionHeader title="Options">
-        <InlineField label="Delimiter" labelWidth={16}>
-          <Input placeholder="," value={jsonData.delimiter} onChange={onInputChange} name="delimiter" />
-        </InlineField>
-        <InlineField label="Comment" labelWidth={16}>
-          <Input placeholder="#" value={jsonData.comment} onChange={onInputChange} name="comment" />
-        </InlineField>
-        <InlineField label="Trim leading space" labelWidth={16}>
-          <InlineSwitch value={jsonData.trimLeadingSpace} onChange={onInputChange} name="trimLeadingSpace" />
-        </InlineField>
-      </SectionHeader>
       <SectionHeader
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            Connection{' '}
+            Access{' '}
             <Badge
               color={pingResult === undefined ? 'blue' : pingResult === true ? 'green' : 'red'}
               icon="signal"
@@ -252,6 +234,14 @@ export function ConfigEditor(props: Props) {
           </div>
         }
       >
+        <InlineField label="Type" labelWidth={16} grow>
+          <RadioButtonGroup
+            fullWidth
+            options={accessTypeOptions}
+            value={jsonData.access ?? 'sftp'}
+            onChange={onAccessTypeChange}
+          />
+        </InlineField>
         <HorizontalGroup>
           <InlineField label="Host" labelWidth={16}>
             <Input placeholder="your.ftp.host" value={jsonData.host} onChange={onInputChange} name="host" />
@@ -296,18 +286,69 @@ export function ConfigEditor(props: Props) {
           />
         </InlineField>
         {renderTargetPathFields()}
-        <InlineField label="File(s) age (hours)" labelWidth={16}>
-          <Input placeholder="24" value={jsonData.age} onChange={onInputChange} name="age" />
-        </InlineField>
         <Button
           icon={isPulling ? 'fa fa-spinner' : 'sync'}
           onClick={onCheck}
           variant="primary"
           tooltip={'Click to verify the provided files on FTP server'}
           tooltipPlacement="right"
+          disabled={!pingResult}
         >
           {isPulling ? 'Checking...' : 'Check'}
         </Button>
+
+        {ftpFiles.length > 0 && <div style={{ paddingTop: '16px' }}>
+          {
+            <table className='filter-table'>
+              <thead>
+                <tr>
+                  <th>File</th>
+                  <th>Size</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {ftpFiles.map((file, idx) => {
+                  return (
+                    <tr key={`file_${idx}`}>
+                      <td>{file.name}</td>
+                      <td>{convertBytes(file.size)}</td>
+                      <td>
+                        <Badge
+                          tooltip={
+                            checkLimit(file.size, 5)
+                              ? undefined
+                              : 'File size is more than 5MB'
+                          }
+                          color={checkLimit(file.size, 5) ? 'green' : 'red'}
+                          text={checkLimit(file.size, 5) ? 'accepted' : 'declined'}
+                          icon="info-circle"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          }
+        </div>}
+      </SectionHeader>
+
+
+      <SectionHeader title="Options">
+        <InlineField label="Delimiter" labelWidth={16} tooltip="Delimiter to be used to parse the CSV files.">
+          <Input placeholder="," value={jsonData.delimiter} onChange={onInputChange} name="delimiter" />
+        </InlineField>
+        <InlineField label="Comment" labelWidth={16}>
+          <Input placeholder="#" value={jsonData.comment} onChange={onInputChange} name="comment" />
+        </InlineField>
+        <InlineField label="Age" labelWidth={16} tooltip={'File(s) age in hours, if it is reached, grafana server will try to pull a new copy from FTP server.'}>
+          <Input placeholder="24" value={jsonData.age} onChange={onInputChange} name="age" />
+        </InlineField>
+        <InlineField label="Trim leading space" labelWidth={16}>
+          <InlineSwitch value={jsonData.trimLeadingSpace} onChange={onInputChange} name="trimLeadingSpace" />
+        </InlineField>
       </SectionHeader>
     </div>
   );

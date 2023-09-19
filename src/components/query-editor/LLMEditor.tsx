@@ -12,9 +12,10 @@ interface Props {
 export const LLMEditor: React.FC<Props> = ({ onReply }) => {
   const [input, setInput] = React.useState('');
   const [message, setMessage] = React.useState('');
-
+  const [enabled, setEnabled] = React.useState(false);
   const { loading, error } = useAsync(async () => {
     const enabled = await llms.openai.enabled();
+    setEnabled(enabled);
     if (!enabled) {
       console.log('LLM is not enabled')
       return false;
@@ -40,7 +41,7 @@ export const LLMEditor: React.FC<Props> = ({ onReply }) => {
         // Accumulate the stream chunks into a single string.
         scan((acc, delta) => acc + delta, '')
       );
-    
+
     console.log('Subscribing to stream')
     // Subscribe to the stream and update the state for each returned value.
     return stream.subscribe(onReply);
@@ -48,6 +49,10 @@ export const LLMEditor: React.FC<Props> = ({ onReply }) => {
 
   if (error) {
     return <>Failed to load LLM Model</>;
+  }
+
+  if (!enabled) {
+    return null
   }
 
   return (

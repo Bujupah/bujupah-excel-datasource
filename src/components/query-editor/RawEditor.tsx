@@ -12,7 +12,6 @@ import { QueryEditorProps } from './types';
 import { QueryEditorRaw } from './QueryEditorRaw';
 import { QueryToolbox } from './QueryToolbox';
 import { MyQuery } from 'types';
-import { EditorHeader, FlexItem } from '@grafana/experimental';
 import { LLMEditor } from './LLMEditor';
 
 interface RawEditorProps extends Omit<QueryEditorProps, 'onChange'> {
@@ -31,19 +30,17 @@ export function RawEditor({ query, onChange, onRunQuery, isRunning }: RawEditorP
   const renderQueryEditor = (width?: number, height?: number) => {
     return (
       <>
-        <EditorHeader>
-          <HorizontalGroup align="center" justify="space-between">
-            <LLMEditor
-              onReply={(reply) => {
-                console.log(reply);
-              }}
-            />
-            <FlexItem grow={1} />
-            <Button icon="play" variant="primary" size="sm" onClick={() => onRunQuery()} disabled={isRunning}>
-              Run query
-            </Button>
-          </HorizontalGroup>
-        </EditorHeader>
+        <HorizontalGroup align="center" justify="space-between">
+          <LLMEditor
+            onReply={(reply) => {
+              console.log(reply);
+            }}
+          />
+
+          <Button icon="play" variant="primary" size="sm" onClick={() => onRunQuery()} disabled={isRunning}>
+            Run query
+          </Button>
+        </HorizontalGroup>
         <QueryEditorRaw
           editorLanguageDefinition={{
             id: 'sql',

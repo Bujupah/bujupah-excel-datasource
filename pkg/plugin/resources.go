@@ -122,7 +122,7 @@ func Check(_ context.Context, req *backend.CallResourceRequest) *Result {
 
 	if err != nil {
 		return &Result{
-			Message: "Failed to create FTP instance",
+			Message: "Failed to connect to FTP instance",
 			Status:  http.StatusInternalServerError,
 			Error:   err.Error(),
 		}
@@ -181,7 +181,7 @@ func Check(_ context.Context, req *backend.CallResourceRequest) *Result {
 
 	return &Result{
 		Status:  http.StatusOK,
-		Message: "Successfully pinged ftp server",
+		Message: "Successfully checked FTP server",
 		Data:    filteredResult,
 	}
 }
