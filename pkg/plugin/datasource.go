@@ -107,18 +107,28 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 // The main use case for these health checks is the test button on the
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
-func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-	var status = backend.HealthStatusOk
-	var message = "Data source is working"
+func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	logger := log.New()
 
-	if rand.Int()%2 == 0 {
-		status = backend.HealthStatusError
-		message = "randomized error"
+	cmd := &DatasourceSettings{}
+
+	logger.Info("JSON Data", "data", req.PluginContext.DataSourceInstanceSettings.JSONData)
+	json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, cmd)
+	jsonData, _ := req.PluginContext.DataSourceInstanceSettings.JSONData.MarshalJSON()
+
+	if err := json.Unmarshal(jsonData, cmd); err != nil {
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "Failed to parse datasource settings",
+		}, nil
 	}
 
+	cmd.Password = req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["password"]
+
+	result := Ping(ctx, cmd)
 	return &backend.CheckHealthResult{
-		Status:  status,
-		Message: message,
+		Status:  backend.HealthStatus(result.Status),
+		Message: result.Error,
 	}, nil
 }
 
@@ -127,26 +137,55 @@ func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequ
 func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
 	response := &backend.CallResourceResponse{}
 
+	if req.Path == "" || req.Method == "GET" {
+		response.Status = http.StatusOK
+		response.Body = []byte("{\"message\":\"" + "datasource is running" + "\"}")
+		return sender.Send(response)
+	}
+
+	if req.Path != "ping" && req.Path != "check" {
+		err := fmt.Errorf("unsupported path %s", req.Path)
+		response.Status = http.StatusBadRequest
+		response.Body = []byte("{\"message\":\"" + err.Error() + "\"}")
+		return sender.Send(response)
+	}
+
+	cmd := &DatasourceSettings{}
+
+	if err := json.Unmarshal(req.Body, cmd); err != nil {
+		body, _ := json.Marshal(struct {
+			Message string `json:"message"`
+			Status  int    `json:"status"`
+			Error   string `json:"error"`
+		}{
+			Message: "Failed to parse payload",
+			Status:  400,
+			Error:   err.Error(),
+		})
+		response.Body = body
+		response.Status = 400
+		return sender.Send(response)
+	}
+
+	if cmd.Secure {
+		cmd.Password = req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["password"]
+	}
+
 	if req.Path == "ping" {
-		result := Ping(ctx, req)
+		result := Ping(ctx, cmd)
 		body, _ := json.Marshal(result)
 		response.Body = body
 		response.Status = result.Status
-
 		return sender.Send(response)
 	}
 
 	if req.Path == "check" {
-		result := Check(ctx, req)
+		result := Check(ctx, cmd)
 		body, _ := json.Marshal(result)
 		response.Body = body
 		response.Status = result.Status
-
 		return sender.Send(response)
 	}
 
-	err := fmt.Errorf("failed to %s", req.Path)
-	response.Status = http.StatusBadRequest
-	response.Body = []byte("{\"message\":\"" + err.Error() + "\"}")
-	return sender.Send(response)
+	return nil
 }
