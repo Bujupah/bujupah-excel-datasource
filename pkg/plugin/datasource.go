@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -61,7 +62,18 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 	return response, nil
 }
 
-type queryModel struct{}
+type queryModel struct{
+	ColumnsType 	[]interface{} `json:"columnsType"`
+	DataSource 		struct {
+		Type 	string `json:"type"`
+		UID 	string `json:"uid"`
+	}
+	RawSql 			string `json:"rawSql"`
+	RefID			string `json:"refId"`
+	DataSourceID	int `json:"datasourceId"`
+	IntervalMs 		int `json:"intervalMs"`
+	MaxDataPoints 	int `json:"maxDataPoints"`
+}
 
 func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
 	var response backend.DataResponse
