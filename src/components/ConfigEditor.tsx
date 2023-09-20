@@ -236,7 +236,7 @@ export function ConfigEditor(props: Props) {
           <InlineSwitch value={jsonData.trimLeadingSpace} onChange={onInputChange} name="trimLeadingSpace" />
         </InlineField>
       </SectionHeader>
-    
+
       <SectionHeader
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -325,19 +325,18 @@ export function ConfigEditor(props: Props) {
 
               <tbody>
                 {ftpFiles.map((file, idx) => {
-                  const isAccepted = checkLimit(file.size, 5);
+                  const error = checkLimit(file.size, 5);
                   const size = convertBytes(file.size)
-                  const color = isAccepted ? 'green' : 'red';
-                  const text = isAccepted ? 'accepted' : 'declined';
-                  const icon = isAccepted ? 'check-circle' : 'times-circle';
-                  const tooltip = isAccepted ? undefined : 'File size is more than 5MB';
+                  const color = !error ? 'green' : 'red';
+                  const text = !error ? 'accepted' : 'declined';
+                  const icon = !error ? 'check-circle' : 'times-circle';
                   return (
                     <tr key={`file_${idx}`}>
                       <td>{file.name}</td>
                       <td>{size}</td>
                       <td>
                         <Badge
-                          tooltip={tooltip}
+                          tooltip={error}
                           color={color}
                           text={text}
                           icon={icon}

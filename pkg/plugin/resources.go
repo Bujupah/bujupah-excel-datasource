@@ -2,9 +2,7 @@ package plugin
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/Bujupah/go4ftp"
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"net/http"
 	"strings"
@@ -18,7 +16,7 @@ type Result struct {
 	Error   string      `json:"error"`
 }
 
-type PingPayload struct {
+type DatasourceSettings struct {
 	Username      string `json:"username"`
 	Password      string `json:"password"`
 	Access        string `json:"access"`
@@ -26,31 +24,14 @@ type PingPayload struct {
 	Port          int    `json:"port"`
 	Secure        bool   `json:"secure"`
 	IgnoreHostKey bool   `json:"ignoreHostKey"`
-}
 
-type CheckPayload struct {
-	PingPayload
 	Target string   `json:"target"`
 	Paths  []string `json:"path"`
 }
 
-func Ping(_ context.Context, req *backend.CallResourceRequest) *Result {
+func Ping(_ context.Context, cmd *DatasourceSettings) *Result {
 	// This function is empty. It is here to make sure that
 	// the package is imported and the code is executed.
-	cmd := &PingPayload{}
-
-	if err := json.Unmarshal(req.Body, cmd); err != nil {
-		return &Result{
-			Message: "Failed to parse payload",
-			Status:  400,
-			Error:   err.Error(),
-		}
-	}
-
-	if cmd.Secure {
-		cmd.Password = req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["password"]
-	}
-
 	instance, err := go4ftp.NewInstance(go4ftp.ConnConfig{
 		Protocol:      cmd.Access,
 		Host:          cmd.Host,
@@ -85,22 +66,8 @@ func Ping(_ context.Context, req *backend.CallResourceRequest) *Result {
 	}
 }
 
-func Check(_ context.Context, req *backend.CallResourceRequest) *Result {
+func Check(_ context.Context, cmd *DatasourceSettings) *Result {
 	logger := log.New()
-
-	cmd := &CheckPayload{}
-
-	if err := json.Unmarshal(req.Body, cmd); err != nil {
-		return &Result{
-			Status:  http.StatusBadRequest,
-			Message: "Failed to parse payload",
-			Error:   err.Error(),
-		}
-	}
-
-	if cmd.Secure {
-		cmd.Password = req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["password"]
-	}
 
 	if len(cmd.Paths) == 0 {
 		return &Result{
