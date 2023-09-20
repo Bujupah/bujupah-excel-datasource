@@ -1,13 +1,13 @@
 import React, { ChangeEvent } from 'react';
 import { useAsync } from 'react-use';
-import { scan } from 'rxjs/operators';
+// import { scan } from 'rxjs/operators';
 
 import { llms } from '@grafana/experimental';
 
 import { Input, Spinner } from '@grafana/ui';
 
 interface Props {
-  onReply: (reply: string) => void;
+  onReply: (reply: any) => void;
 }
 export const LLMEditor: React.FC<Props> = ({ onReply }) => {
   const [input, setInput] = React.useState('');
@@ -29,22 +29,24 @@ export const LLMEditor: React.FC<Props> = ({ onReply }) => {
 
     console.log('Sending message')
     // Stream the completions. Each element is the next stream chunk.
-    const stream = llms.openai
-      .streamChatCompletions({
+    const response = await llms.openai
+      .chatCompletions({
         model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: 'You are a SQL assistant.' },
+          { role: 'system', content: `
+            You are a PostgreSQL database expert. 
+            Generate only the sql in response. Do not add any other details.
+            Your response will be directly written in a query editor, if you want to write some details, add it as a sql comment.
+          ` },
           { role: 'user', content: message },
         ],
       })
-      .pipe(
-        // Accumulate the stream chunks into a single string.
-        scan((acc, delta) => acc + delta, '')
-      );
-
-    console.log('Subscribing to stream')
+    
     // Subscribe to the stream and update the state for each returned value.
-    return stream.subscribe(onReply);
+    console.log('Response to console')
+    const reply = response?.choices[0]?.message?.content
+    onReply(reply)
+    return reply
   }, [message]);
 
   if (error) {

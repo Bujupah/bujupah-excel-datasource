@@ -328,7 +328,7 @@ export function ConfigEditor(props: Props) {
                   const isAccepted = checkLimit(file.size, 5);
                   const size = convertBytes(file.size)
                   const color = isAccepted ? 'green' : 'red';
-                  const text = isAccepted ? 'accepted' : 'declined';
+                  const text = isAccepted ? 'accepted' : 'rejected';
                   const icon = isAccepted ? 'check-circle' : 'times-circle';
                   const tooltip = isAccepted ? undefined : 'File size is more than 5MB';
                   return (
