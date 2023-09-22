@@ -52,11 +52,13 @@ export function ConfigEditor(props: Props) {
   }, []);
 
   const onInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const key = event.target.name
+    const value = ['ignoreHostKey', 'trimLeadingSpace'].includes(key)
+      ? event.target.checked
+      : key === 'port' ? +event.target.value : event.target.value
     const data: MyDataSourceOptions = {
       ...options.jsonData,
-      [event.target.name]: ['ignoreHostKey', 'trimLeadingSpace'].includes(event.target.name)
-        ? event.target.checked
-        : event.target.value,
+      [key]: value,
     };
     onOptionsChange({ ...options, jsonData: data });
   };
@@ -262,7 +264,7 @@ export function ConfigEditor(props: Props) {
             <Input placeholder="your.ftp.host" value={jsonData.host} onChange={onInputChange} name="host" />
           </InlineField>
           <InlineField label="Port">
-            <Input placeholder="22" value={jsonData.port} onChange={onInputChange} name="port" width={24} />
+            <Input type="number" placeholder="22" value={jsonData.port} onChange={onInputChange} name="port" width={24} />
           </InlineField>
         </HorizontalGroup>
         <InlineField label="Ignore host key" labelWidth={16}>
