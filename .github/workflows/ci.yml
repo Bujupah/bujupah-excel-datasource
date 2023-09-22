@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  # Enable on demande trigger
+  workflow_dispatch:
   push:
     branches:
       - master
