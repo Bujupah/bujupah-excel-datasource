@@ -43,7 +43,7 @@ export function ConfigEditor(props: Props) {
     const data: MyDataSourceOptions = {
       ...options.jsonData,
       path: pathIsEmpty ? [''] : jsonData.path,
-      target: jsonData.target ?? 'file',
+      target: jsonData.target ?? 'folder',
       access: jsonData.access ?? 'sftp',
     };
     onPing();
@@ -294,11 +294,12 @@ export function ConfigEditor(props: Props) {
       </SectionHeader>
 
       <SectionHeader title="Connections">
-        <InlineField label="Mode" labelWidth={16} grow>
+        <InlineField label="Mode" labelWidth={16} grow tooltip={"Support only folder for now"}>
           <RadioButtonGroup
             fullWidth
             options={ftpTargetOptions}
-            value={jsonData.target ?? 'file'}
+            value={jsonData.target ?? 'folder'}
+            disabledOptions={['file', 'files']}
             onChange={onTargetTypeChange}
           />
         </InlineField>
