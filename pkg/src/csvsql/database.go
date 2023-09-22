@@ -3,7 +3,9 @@ package csvsql
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"github.com/bujupah/excel/pkg/models"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 	_ "github.com/mithrandie/csvq-driver"
 )
 
@@ -14,13 +16,15 @@ type Database struct {
 	TenantId int64
 }
 
-func New(tenantId int64, dsName string, dsVersion string, onPullNewData func(string) error) (*Database, error) {
-	dbPath, _, err := CreateSpace(tenantId)
+func New(tenantId int64, dsUid string, dsVersion string, onPullNewData func(string) error) (*Database, error) {
+	logger := log.New()
+
+	dbPath, _, err := CreateSpace(dsUid, tenantId)
 	if err != nil {
 		return nil, NewError("Failed to create tenant space", err)
 	}
 
-	shouldUpdate, version, err := VerifyVersion(tenantId, dsName, dsVersion)
+	shouldUpdate, version, err := VerifyVersion(tenantId, dsUid, dsVersion)
 	if err != nil {
 		return nil, NewError("Failed to verify db version", err)
 	}
@@ -29,7 +33,7 @@ func New(tenantId int64, dsName string, dsVersion string, onPullNewData func(str
 			return nil, NewError("Failed to pull new data", err)
 		}
 	} else {
-		fmt.Printf("Database is up to date v%v\n", version)
+		logger.Info("Database is up to date", "version", version)
 	}
 
 	db, err := sql.Open("csvq", dbPath)
@@ -44,23 +48,26 @@ func New(tenantId int64, dsName string, dsVersion string, onPullNewData func(str
 
 	return &Database{
 		db:       db,
-		Space:    dsName,
+		Space:    dsUid,
 		Version:  dsVersion,
 		TenantId: tenantId,
 	}, nil
 }
 
-func (i *Database) RunQuery(ctx context.Context, query string) ([][]interface{}, error) {
-	r, err := i.db.QueryContext(ctx, query)
+func (i *Database) RunQuery(ctx context.Context, query models.QueryModel) (*data.Frame, error) {
+	r, err := i.db.QueryContext(ctx, query.RawSql)
 	if err != nil {
 		return nil, NewError("Failed to query database", err)
 	}
-	defer r.Close()
 
-	data, err := Scan(r)
+	scanResult, err := Scan(r, query)
 	if err != nil {
 		return nil, NewError("Failed to scan rows", err)
 	}
 
-	return data, nil
+	return scanResult, nil
+}
+
+func (i *Database) Close() error {
+	return i.db.Close()
 }

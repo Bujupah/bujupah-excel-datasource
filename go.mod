@@ -6,6 +6,11 @@ require github.com/grafana/grafana-plugin-sdk-go v0.174.0
 
 require (
 	github.com/Bujupah/go4ftp v0.5.0 // indirect
+	github.com/mithrandie/csvq v1.18.1 // indirect
+	github.com/mithrandie/csvq-driver v1.7.0 // indirect
+)
+
+require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -50,8 +55,6 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
-	github.com/mithrandie/csvq v1.18.1 // indirect
-	github.com/mithrandie/csvq-driver v1.7.0 // indirect
 	github.com/mithrandie/go-file/v2 v2.1.0 // indirect
 	github.com/mithrandie/go-text v1.6.0 // indirect
 	github.com/mithrandie/readline-csvq v1.3.0 // indirect

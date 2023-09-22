@@ -19,13 +19,17 @@ Load multiple csv/excel files data into grafana's dashboards from ftp/sftp serve
 - Support multiple formats such as CSV, TSV, LTSV, Fixed-Length Format, JSON and JSON Lines.
 - Auto-detect supported files.
 - Data joins between multiple files.
-- Support grafana variables.
-- SQL-like query language.
+- SQL like query language.
 - SQL query editor in fullscreen.
 - SQL syntax highlighting.
 - SQL autocomplete.
 - SQL validation.
 - SQL formatting.
+- Support grafana variables.
+- Support LLM - Text to SQL using OpenAI.
+
+## Limitations
+- Every column type is string - no type casting. (Workaround: you can use grafana transformation to make this work)
 
 ## Documentation
 

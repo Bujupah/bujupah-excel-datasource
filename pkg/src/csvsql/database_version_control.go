@@ -1,40 +1,37 @@
 package csvsql
 
 import (
-	"fmt"
 	"github.com/bujupah/excel/pkg/src/constants"
 	"os"
-	"strings"
+	"path/filepath"
 )
 
-func VerifyVersion(tenantId int64, dbName string, dbVersion string) (bool, string, error) {
-	dbName = strings.ReplaceAll(dbName, " ", "_")
-	versionPath := fmt.Sprintf("./%v-%v/%v.version", constants.ParentFolder, tenantId, dbName)
-
-	fmt.Println("Checking version on", versionPath)
+func VerifyVersion(tenantId int64, dbUid string, dbVersion string) (bool, string, error) {
+	versionPath := filepath.Join(constants.TenantDatasourceFolder(dbUid, tenantId), ".version")
+	logger.Info("Checking version", "path", versionPath)
 
 	if _, err := os.Stat(versionPath); err != nil {
-		if err := WriteVersion(tenantId, dbName, dbVersion); err != nil {
-			fmt.Printf("Error writing version: %v\n", err)
+		if err := WriteVersion(tenantId, dbUid, dbVersion); err != nil {
+			logger.Error("Error writing version", err)
 			return false, dbVersion, err
 		}
-		fmt.Println("Updated database to a new version")
+		logger.Info("Updated database to a new version")
 		return true, dbVersion, nil
 	}
 
-	fmt.Println("Found an existing database version")
+	logger.Info("Found an existing database version")
 	bytes, err := os.ReadFile(versionPath)
 	if err != nil {
 		return false, "", err
 	}
 
-	fmt.Println("Comparing database version with datasource version")
+	logger.Info("Comparing database version with datasource version")
 	localVersion := string(bytes)
 	shouldUpdate := dbVersion != localVersion
 
 	if shouldUpdate {
-		if err := WriteVersion(tenantId, dbName, dbVersion); err != nil {
-			fmt.Println("Failed to update database", err)
+		if err := WriteVersion(tenantId, dbUid, dbVersion); err != nil {
+			logger.Error("Failed to update database", err)
 			return false, dbVersion, err
 		}
 	}
@@ -42,14 +39,14 @@ func VerifyVersion(tenantId int64, dbName string, dbVersion string) (bool, strin
 	return shouldUpdate, localVersion, nil
 }
 
-func WriteVersion(tenantId int64, dbName string, version string) error {
-	dbName = strings.ReplaceAll(dbName, " ", "_")
+func WriteVersion(tenantId int64, dbUid string, version string) error {
+	versionPath := filepath.Join(constants.TenantDatasourceFolder(dbUid, tenantId), ".version")
 
-	versionPath := fmt.Sprintf("./%v-%v/%v.version", constants.ParentFolder, tenantId, dbName)
+	logger.Info("Writing a new version", "version", version, "path", versionPath)
 
-	fmt.Printf("Writing version v%v to %v\n", version, versionPath)
-
-	_ = os.Remove(versionPath)
+	if err := os.Remove(versionPath); err != nil {
+		logger.Error("Failed to remove old version", err)
+	}
 
 	return os.WriteFile(versionPath, []byte(version), os.ModePerm)
 }

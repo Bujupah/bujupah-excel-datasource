@@ -1,26 +1,25 @@
 package csvsql
 
 import (
-	"fmt"
 	"github.com/bujupah/excel/pkg/src/constants"
 	"os"
 )
 
-func CreateSpace(tenantId int64) (string, bool, error) {
-	dbPath := fmt.Sprintf("./%v-%v", constants.ParentFolder, tenantId) // Change this to your desired folder path
+func CreateSpace(dsUid string, tenantId int64) (string, bool, error) {
+	dbPath := constants.TenantDatasourceFolder(dsUid, tenantId)
 	_, err := os.Stat(dbPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(dbPath, os.ModePerm); err != nil {
 				return "", false, err
 			}
-			fmt.Println("Space is created on", dbPath)
+			logger.Info("Space is created", "path", dbPath)
 			return dbPath, true, nil
 		} else {
-			fmt.Println("Error while checking if space exists", err)
+			logger.Error("Error while checking if space exists", err)
 			return "", false, err
 		}
 	}
-	fmt.Println("Existing space is used on", dbPath)
+	logger.Info("Space already exist", "path", dbPath)
 	return dbPath, false, nil
 }

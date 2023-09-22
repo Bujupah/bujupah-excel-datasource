@@ -2,83 +2,64 @@ package csvsql
 
 import (
 	"database/sql"
-	"strconv"
+	"encoding/csv"
+	"github.com/bujupah/excel/pkg/models"
+	"github.com/bujupah/excel/pkg/src/constants"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data/sqlutil"
+	"os"
+	"reflect"
+	"strings"
+	"time"
 )
 
-func Scan(rs *sql.Rows) (rows [][]interface{}, err error) {
-	columns, err := rs.Columns()
-	if err != nil {
-		return nil, err
+var logger = log.New()
+
+func Scan(rs *sql.Rows, query models.QueryModel) (*data.Frame, error) {
+	defer rs.Close()
+	converters := []sqlutil.Converter{
+		sqlutil.NewDefaultConverter("id", true, reflect.TypeOf(1)),
+		sqlutil.NewDefaultConverter("value", true, reflect.TypeOf(int64(1))),
+		sqlutil.NewDefaultConverter("time", true, reflect.TypeOf(time.Time{})),
+		sqlutil.NewDefaultConverter("metric", true, reflect.TypeOf("")),
 	}
-	var row = make([]interface{}, 0, len(columns))
-	for range columns {
-		row = append(row, new(interface{}))
+	frames, err := sqlutil.FrameFromRows(rs, query.MaxDataPoints, converters...)
+	return frames, err
+}
+
+type Table struct {
+	Name    string   `json:"table"`
+	Columns []string `json:"columns"`
+}
+
+func GetTables(Uid string, tenantId int64) []Table {
+	dsFolder := constants.TenantDatasourceFolder(Uid, tenantId)
+	// get all csv files
+	files, _ := os.ReadDir(dsFolder)
+
+	tables := make([]Table, 0)
+	for _, file := range files {
+		if !strings.Contains(file.Name(), ".csv") {
+			continue
+		}
+		f, _ := os.Open(dsFolder + "/" + file.Name())
+		reader := csv.NewReader(f)
+		headers, err := reader.Read()
+		if err == nil {
+			tables = append(tables, Table{
+				Name:    file.Name(),
+				Columns: headers,
+			})
+		}
+		f.Close()
 	}
 
-	for rs.Next() {
-		if err := rs.Scan(row...); err != nil {
-			return nil, err
-		}
-		rowValues := make([]interface{}, len(columns))
-		for i := range columns {
-			rowValues[i] = *row[i].(*interface{})
-		}
-		rows = append(rows, rowValues)
-	}
-
-	return rows, nil
+	return tables
 }
 
 type Column struct {
-	Value interface{}
-	Type  string
-}
-
-func SetTypeMap(rows [][]interface{}) [][]Column {
-	result := make([][]Column, 0)
-
-	for _, row := range rows {
-		columns := make([]Column, 0)
-		for _, col := range row {
-			if col == nil {
-				columns = append(columns, Column{
-					Value: nil,
-					Type:  "nil",
-				})
-				continue
-			}
-
-			if v, err := strconv.ParseInt(col.(string), 10, 64); err == nil {
-				columns = append(columns, Column{
-					Value: v,
-					Type:  "int64",
-				})
-				continue
-			}
-
-			if v, err := strconv.ParseFloat(col.(string), 64); err == nil {
-				columns = append(columns, Column{
-					Value: v,
-					Type:  "float64",
-				})
-				continue
-			}
-
-			if v, err := strconv.ParseBool(col.(string)); err == nil {
-				columns = append(columns, Column{
-					Value: v,
-					Type:  "bool",
-				})
-				continue
-			}
-
-			columns = append(columns, Column{
-				Value: col,
-				Type:  "string",
-			})
-		}
-		result = append(result, columns)
-	}
-
-	return result
+	Name   string
+	Values []interface{}
+	Type   string
 }

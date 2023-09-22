@@ -2,9 +2,12 @@ package plugin
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/Bujupah/go4ftp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -17,13 +20,13 @@ type Result struct {
 }
 
 type DatasourceSettings struct {
-	Username      string `json:"username"`
-	Password      string `json:"password"`
-	Access        string `json:"access"`
-	Host          string `json:"host"`
-	Port          int    `json:"port"`
-	Secure        bool   `json:"secure"`
-	IgnoreHostKey bool   `json:"ignoreHostKey"`
+	Username      string      `json:"username"`
+	Password      string      `json:"password"`
+	Access        string      `json:"access"`
+	Host          string      `json:"host"`
+	Port          interface{} `json:"port"`
+	Secure        bool        `json:"secure"`
+	IgnoreHostKey bool        `json:"ignoreHostKey"`
 
 	Target string   `json:"target"`
 	Paths  []string `json:"path"`
@@ -32,16 +35,24 @@ type DatasourceSettings struct {
 func Ping(_ context.Context, cmd *DatasourceSettings) *Result {
 	// This function is empty. It is here to make sure that
 	// the package is imported and the code is executed.
+
+	port, err := strconv.Atoi(fmt.Sprintf("%v", cmd.Port))
+	if err != nil {
+		return &Result{
+			Message: "Failed to create FTP instance",
+			Status:  500,
+			Error:   err.Error(),
+		}
+	}
 	instance, err := go4ftp.NewInstance(go4ftp.ConnConfig{
 		Protocol:      cmd.Access,
 		Host:          cmd.Host,
-		Port:          cmd.Port,
+		Port:          port,
 		User:          cmd.Username,
 		Password:      cmd.Password,
 		IgnoreHostKey: cmd.IgnoreHostKey,
 		Timeout:       10 * time.Second,
 	})
-
 	if err != nil {
 		return &Result{
 			Message: "Failed to create FTP instance",
@@ -77,10 +88,11 @@ func Check(_ context.Context, cmd *DatasourceSettings) *Result {
 		}
 	}
 
+	port, _ := strconv.Atoi(fmt.Sprintf("%v", cmd.Port))
 	instance, err := go4ftp.NewInstance(go4ftp.ConnConfig{
 		Protocol:      cmd.Access,
 		Host:          cmd.Host,
-		Port:          cmd.Port,
+		Port:          port,
 		User:          cmd.Username,
 		Password:      cmd.Password,
 		IgnoreHostKey: cmd.IgnoreHostKey,
@@ -153,6 +165,15 @@ func Check(_ context.Context, cmd *DatasourceSettings) *Result {
 	}
 }
 
+func GetDatasourceSettings(jsonData []byte, secureJsonData map[string]string) (*DatasourceSettings, error) {
+	cmd := &DatasourceSettings{}
+	if err := json.Unmarshal(jsonData, cmd); err != nil {
+		return nil, err
+	}
+	cmd.Password = secureJsonData["password"]
+	return cmd, nil
+}
+
 func resultEmptyError(target, filepath string) *Result {
 	if target == "file" || target == "files" {
 		return &Result{
@@ -173,4 +194,8 @@ func resultEmptyError(target, filepath string) *Result {
 	}
 
 	return nil
+}
+
+func ToErrorJson(err string) string {
+	return fmt.Sprintf("{\"error\": \"%s\"}", err)
 }

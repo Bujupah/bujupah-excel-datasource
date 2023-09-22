@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"math/rand"
-	"net/http"
-	"time"
-
+	"github.com/Bujupah/go4ftp"
+	"github.com/bujupah/excel/pkg/models"
+	"github.com/bujupah/excel/pkg/src/csvsql"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	_ "github.com/mithrandie/csvq-driver"
+	"net/http"
+	"path/filepath"
+	"time"
 )
 
 // Make sure Datasource implements required interfaces. This is important to do
@@ -33,7 +36,8 @@ func NewDatasource(_ backend.DataSourceInstanceSettings) (instancemgmt.Instance,
 
 // Datasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
-type Datasource struct{}
+type Datasource struct {
+}
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created. As soon as datasource settings change detected by SDK old datasource instance will
@@ -62,40 +66,83 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 	return response, nil
 }
 
-type queryModel struct{
-	ColumnsType 	[]interface{} `json:"columnsType"`
-	DataSource 		struct {
-		Type 	string `json:"type"`
-		UID 	string `json:"uid"`
-	}
-	RawSql 			string `json:"rawSql"`
-	RefID			string `json:"refId"`
-	DataSourceID	int `json:"datasourceId"`
-	IntervalMs 		int `json:"intervalMs"`
-	MaxDataPoints 	int `json:"maxDataPoints"`
-}
+func (d *Datasource) query(ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
+	logger := log.New().With("refId", query.RefID)
 
-func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
 	var response backend.DataResponse
 
 	// Unmarshal the JSON into our queryModel.
-	var qm queryModel
+	var qm models.QueryModel
 
 	err := json.Unmarshal(query.JSON, &qm)
 	if err != nil {
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal: %v", err.Error()))
 	}
 
-	// create data frame response.
-	// For an overview on data frames and how grafana handles them:
-	// https://grafana.com/docs/grafana/latest/developers/plugins/data-frames/
+	jsonData, _ := pCtx.DataSourceInstanceSettings.JSONData.MarshalJSON()
+	secureJsonData := pCtx.DataSourceInstanceSettings.DecryptedSecureJSONData
+	setting, err := GetDatasourceSettings(jsonData, secureJsonData)
+
+	uid := pCtx.DataSourceInstanceSettings.UID
+	version := fmt.Sprintf("%d", pCtx.DataSourceInstanceSettings.Updated.Unix())
+
+	s, err := csvsql.New(pCtx.OrgID, uid, version, func(dsPath string) error {
+		ftp, err := go4ftp.NewInstance(go4ftp.ConnConfig{
+			Protocol:      setting.Access,
+			Host:          setting.Host,
+			Port:          22,
+			User:          setting.Username,
+			Password:      setting.Password,
+			Timeout:       10 * time.Second,
+			IgnoreHostKey: setting.IgnoreHostKey,
+		})
+		if err != nil {
+			return nil
+		}
+
+		for _, path := range setting.Paths {
+			entries, _ := ftp.Read(path)
+			for _, entry := range entries {
+				if entry.Size > 5*1024*1024 {
+					logger.Warn("file size is too big", "file", entry.Name, "size", entry.Size)
+					continue
+				}
+
+				if setting.Target == "folder" {
+					source := filepath.Join(path, entry.Name)
+					target := filepath.Join(dsPath, entry.Name)
+					logger.Info("downloading file", "source", source, "target", target)
+					if err := ftp.DownloadFile(source, target); err != nil {
+						logger.Error("failed to download", err)
+						continue
+					}
+					continue
+				}
+			}
+		}
+
+		logger.Info("database location", "path", dsPath)
+		//return ftp.Close
+		return nil
+	})
+
+	if err != nil {
+		return backend.ErrDataResponse(backend.StatusInternal, err.Error())
+	}
+
+	defer func(s *csvsql.Database) {
+		if err := s.Close(); err != nil {
+			logger.Error("Failed to close database connection", err)
+		}
+	}(s)
+
 	frame := data.NewFrame("response")
 
-	// add fields.
-	frame.Fields = append(frame.Fields,
-		data.NewField("time", nil, []time.Time{query.TimeRange.From, query.TimeRange.To}),
-		data.NewField("values", nil, []int64{10, 20}),
-	)
+	logger.Info("Running query", "query", qm.RawSql)
+	frame, err = s.RunQuery(ctx, qm)
+	if err != nil {
+		return backend.ErrDataResponse(backend.StatusInternal, err.Error())
+	}
 
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
@@ -108,27 +155,30 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
 func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-	logger := log.New()
-
-	cmd := &DatasourceSettings{}
-
-	logger.Info("JSON Data", "data", req.PluginContext.DataSourceInstanceSettings.JSONData)
-	json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, cmd)
 	jsonData, _ := req.PluginContext.DataSourceInstanceSettings.JSONData.MarshalJSON()
+	secureJsonData := req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData
 
-	if err := json.Unmarshal(jsonData, cmd); err != nil {
+	setting, err := GetDatasourceSettings(jsonData, secureJsonData)
+	if err != nil {
 		return &backend.CheckHealthResult{
-			Status:  backend.HealthStatusError,
-			Message: "Failed to parse datasource settings",
+			Status:      backend.HealthStatusError,
+			Message:     "Failed to parse datasource settings",
+			JSONDetails: []byte(ToErrorJson(err.Error())),
 		}, nil
 	}
 
-	cmd.Password = req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["password"]
+	result := Ping(ctx, setting)
+	if result.Error != "" {
+		return &backend.CheckHealthResult{
+			Status:      backend.HealthStatusError,
+			Message:     result.Error,
+			JSONDetails: []byte(ToErrorJson(err.Error())),
+		}, nil
+	}
 
-	result := Ping(ctx, cmd)
 	return &backend.CheckHealthResult{
-		Status:  backend.HealthStatus(result.Status),
-		Message: result.Error,
+		Status:  backend.HealthStatusOk,
+		Message: result.Message,
 	}, nil
 }
 
@@ -136,6 +186,15 @@ func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRe
 // allows sending the first message.
 func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
 	response := &backend.CallResourceResponse{}
+
+	if req.Path == "tables" {
+		uid := req.PluginContext.DataSourceInstanceSettings.UID
+		tables := csvsql.GetTables(uid, req.PluginContext.OrgID)
+		body, _ := json.Marshal(tables)
+		response.Body = body
+		response.Status = http.StatusOK
+		return sender.Send(response)
+	}
 
 	if req.Path == "" || req.Method == "GET" {
 		response.Status = http.StatusOK
@@ -150,9 +209,11 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 		return sender.Send(response)
 	}
 
-	cmd := &DatasourceSettings{}
+	jsonData := req.Body
+	secureJsonData := req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData
 
-	if err := json.Unmarshal(req.Body, cmd); err != nil {
+	setting, err := GetDatasourceSettings(jsonData, secureJsonData)
+	if err != nil {
 		body, _ := json.Marshal(struct {
 			Message string `json:"message"`
 			Status  int    `json:"status"`
@@ -167,12 +228,8 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 		return sender.Send(response)
 	}
 
-	if cmd.Secure {
-		cmd.Password = req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["password"]
-	}
-
 	if req.Path == "ping" {
-		result := Ping(ctx, cmd)
+		result := Ping(ctx, setting)
 		body, _ := json.Marshal(result)
 		response.Body = body
 		response.Status = result.Status
@@ -180,7 +237,7 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 	}
 
 	if req.Path == "check" {
-		result := Check(ctx, cmd)
+		result := Check(ctx, setting)
 		body, _ := json.Marshal(result)
 		response.Body = body
 		response.Status = result.Status

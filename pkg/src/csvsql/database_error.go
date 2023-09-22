@@ -18,6 +18,6 @@ func NewError(message string, err error) error {
 			queryErr.Message(),
 		)
 	} else {
-		return fmt.Errorf("%s: %v", message, err)
+		return fmt.Errorf("%s: %s", message, err.Error())
 	}
 }
