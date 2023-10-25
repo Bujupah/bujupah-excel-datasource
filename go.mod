@@ -5,9 +5,9 @@ go 1.19
 require github.com/grafana/grafana-plugin-sdk-go v0.174.0
 
 require (
-	github.com/Bujupah/go4ftp v0.5.0 // indirect
-	github.com/mithrandie/csvq v1.18.1 // indirect
-	github.com/mithrandie/csvq-driver v1.7.0 // indirect
+	github.com/Bujupah/go4ftp v0.5.0
+	github.com/mithrandie/csvq v1.18.1
+	github.com/mithrandie/csvq-driver v1.7.0
 )
 
 require (
@@ -57,7 +57,6 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mithrandie/go-file/v2 v2.1.0 // indirect
 	github.com/mithrandie/go-text v1.6.0 // indirect
-	github.com/mithrandie/readline-csvq v1.3.0 // indirect
 	github.com/mithrandie/ternary v1.1.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -75,8 +74,6 @@ require (
 	github.com/unknwon/com v1.0.1 // indirect
 	github.com/unknwon/log v0.0.0-20150304194804-e617c87089d3 // indirect
 	github.com/urfave/cli v1.22.12 // indirect
-	github.com/urfave/cli/v2 v2.25.1 // indirect
-	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.42.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.42.0 // indirect
 	go.opentelemetry.io/contrib/propagators/jaeger v1.17.0 // indirect
@@ -96,7 +93,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230731193218-e0aa005b6bdf // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230731193218-e0aa005b6bdf // indirect
-	google.golang.org/grpc v1.57.0 // indirect
+	google.golang.org/grpc v1.57.1 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
